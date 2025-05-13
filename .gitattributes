@@ -1,2 +1,4 @@
-about.php export-ignore
-/assets export-ignore
+/src/ export-ignore
+/blink-updater/ export-ignore
+composer.json export-ignore
+README.md export-ignore
