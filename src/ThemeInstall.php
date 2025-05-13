@@ -311,7 +311,6 @@ class ThemeInstall
 {
     public static function install()
     {
-        //$dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . "theme";
         $dir = dirname(__DIR__);
         $excludeFiles = ["src", "blink-updater", ".gitattributes", ".gitignore", "composer.json", "README.md"];
 
@@ -365,6 +364,9 @@ class ThemeInstall
         echo("$boldText Blink (Parent) Thema installatie voltooid!\n");
         echo "$greenBackColor" . str_repeat(" ", 80) . "$reset\n";
         echo "\n";
+
+        echo "Plugin wordt nu geinstalleerd";
+        sleep(2);
 
         $pluginPath = dirname(__DIR__) . "/blink-updater";
         $pluginTarget = getcwd() . "/wp-content/plugins/blink-updater";
@@ -462,49 +464,42 @@ class ThemeInstall
         echo "\n";
     }
 
-    private static function recursiveCopy($source, $destination)
+    private static function recursiveCopy($source, $destination, array $exclude = [])
     {
-
         $boldText = "\033[1m";
         $italicText = "\033[3m";
-        $underlineText = "\033[4m";
-
         $reset = "\033[0m";
         $blackForeColor = "\033[30m";
         $redForeColor = "\033[31m";
         $greenForeColor = "\033[32m";
         $yellowForeColor = "\033[38;2;255;255;0m";
         $blueForeColor = "\033[38;2;0;120;255m";
-        $magentaForeColor = "\033[35m";
-        $cyanForeColor = "\033[36m";
 
-        $whiteBackColor = "\033[48;5;15m";
-        $redBackColor = "\033[41m";
-        $greenBackColor = "\033[42m";
-        $yellowBackColor = "\033[48;2;255;255;0m";
-        $blueBackColor = "\033[44m";
-        $magentaBackColor = "\033[45m";
-        $cyanBackColor = "\033[46m";
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
         if (!file_exists($source)) return false;
         if (!file_exists($destination)) mkdir($destination, 0755, true);
 
-        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-
         $files = scandir($source);
         foreach ($files as $file) {
-            if ($file === "." || $file === "..") continue;
+            if (in_array($file, ['.', '..'])) continue;
 
             $srcPath = $source . DIRECTORY_SEPARATOR . $file;
             $destPath = $destination . DIRECTORY_SEPARATOR . $file;
 
+            foreach ($exclude as $excludeItem) {
+                if (str_starts_with(realpath($srcPath), realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . $excludeItem))) {
+                    continue 2;
+                }
+            }
+
             if (is_dir($srcPath)) {
-                self::recursiveCopy($srcPath, $destPath);
+                self::recursiveCopy($srcPath, $destPath, $exclude);
                 continue;
             }
 
             if (file_exists($destPath) && md5_file($srcPath) !== md5_file($destPath)) {
-                warning("\n$reset$redBackColor$boldText Er is een bestand gevonden $reset$yellowForeColor$boldText$italicText($file)$reset$redBackColor$boldText die anders is dan de zojuist opgehaalde versie, Wil je jouw lokale versie $reset$yellowForeColor$boldText$italicText($file)$reset$redBackColor$boldText overschrijven met de opgehaalde versie?: $reset\n $destPath");
+                warning("\n$reset$redForeColor$boldText Er is een bestand gevonden $reset$yellowForeColor$boldText$italicText($file)$reset$redForeColor$boldText dat afwijkt. Overschrijven?: $reset\n $destPath");
 
                 if ($isWindows) {
                     echo "$yellowForeColor$boldText Overschrijven?$reset Ja/Nee: ";
@@ -514,11 +509,8 @@ class ThemeInstall
                     $overwrite = confirm("$yellowForeColor$boldText Overschrijven?$reset", default: false, yes: "Ja", no: "Nee");
                 }
 
-                if (
-                    ($isWindows && !in_array($overwrite, ["j", "ja", "y", "yes"])) || (!$isWindows && !$overwrite)
-                ) {
-                    echo "$boldText Bestand overgeslagen: $file\n";
-                    echo "\n";
+                if (($isWindows && !in_array($overwrite, ["j", "ja", "y", "yes"])) || (!$isWindows && !$overwrite)) {
+                    echo "$boldText Bestand overgeslagen: $file\n\n";
                     sleep(1);
                     continue;
                 }
@@ -531,18 +523,17 @@ class ThemeInstall
                     $doubleCheck = confirm("$reset$redForeColor$boldText Weet je het echt zeker dat je $reset$yellowForeColor$boldText$italicText($file)$reset$redForeColor$boldText wilt overschrijven?$reset", default: false, yes: "Ja", no: "Nee");
                 }
 
-                if (
-                    ($isWindows && !in_array($doubleCheck, ["j", "ja", "y", "yes"])) || (!$isWindows && !$doubleCheck)
-                ) {
-                    echo "$boldText Bestand overgeslagen: $file\n";
-                    echo "\n";
+                if (($isWindows && !in_array($doubleCheck, ["j", "ja", "y", "yes"])) || (!$isWindows && !$doubleCheck)) {
+                    echo "$boldText Bestand overgeslagen: $file\n\n";
                     sleep(1);
                     continue;
                 }
             }
+
             copy($srcPath, $destPath);
             echo "$greenForeColor Bestand gekopieerd: $reset$file\n";
         }
+
         return true;
     }
 }
