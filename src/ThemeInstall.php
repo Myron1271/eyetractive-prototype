@@ -311,7 +311,9 @@ class ThemeInstall
 {
     public static function install()
     {
-        $dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . "theme";
+        //$dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . "theme";
+        $dir = dirname(__DIR__);
+        $excludeFiles = ["src", "blink-updater", ".gitattributes", ".gitignore", "composer.json", "README.md"];
 
         $boldText = "\033[1m";
         $italicText = "\033[3m";
@@ -339,12 +341,12 @@ class ThemeInstall
         echo "$boldText Welkom bij de Blink Installer! $reset \n";
         echo "$greenBackColor" . str_repeat(" ", 80) . "$reset\n";
 
-        $baseThemePath = getcwd() . "/wp-content/themes/blink";
+        $baseThemePath = getcwd() . "/wp-content/themes/Blink";
 
         info("$yellowForeColor$boldText Blink (parent) thema wordt geplaatst in:$reset \n$baseThemePath");
         info("$reset De installatie zal automatisch beginnen over$yellowForeColor$boldText 5 seconden $reset, druk op$boldText$blueForeColor $whiteBackColor ENTER $reset om meteen te starten");
-        stream_set_blocking(STDIN, false);
 
+        stream_set_blocking(STDIN, false);
         for ($i = 5; $i > 0; $i--) {
             echo "$greenBackColor$blackForeColor$boldText $i... $reset";
             sleep(1);
@@ -354,16 +356,26 @@ class ThemeInstall
                 break;
             }
         }
-
         stream_set_blocking(STDIN, true);
         echo "\n";
 
-        self::recursiveCopy($dir, $baseThemePath);
+        self::recursiveCopy($dir, $baseThemePath, $excludeFiles);
         echo "\n";
         echo "$greenBackColor" . str_repeat(" ", 80) . "$reset\n";
         echo("$boldText Blink (Parent) Thema installatie voltooid!\n");
         echo "$greenBackColor" . str_repeat(" ", 80) . "$reset\n";
         echo "\n";
+
+        $pluginPath = dirname(__DIR__) . "/blink-updater";
+        $pluginTarget = getcwd() . "/wp-content/plugins/blink-updater";
+        if (!is_dir($pluginTarget)) {
+            mkdir($pluginTarget, 0755, true);
+            self::recursiveCopy($pluginPath, $pluginTarget);
+            info("$greenForeColor Blink Updater plugin is gekopieerd naar:$reset $pluginTarget");
+        } else {
+            warning("$yellowForeColor Blink Updater plugin bestaat al, overslaan.$reset");
+        }
+
 
         $isWindows = defined("PHP_OS_FAMILY") ? PHP_OS_FAMILY === "Windows" : strtoupper(substr(PHP_OS, 0, 3)) === "WIN";
 
@@ -378,7 +390,6 @@ class ThemeInstall
 
         if ($createChild) {
             $siteName = "";
-
             do {
                 if ($isWindows) {
                     echo "$reset$boldText$cyanForeColor Wat is de naam van het Child Theme? (typ $boldText$yellowForeColor'cancel'$reset$boldText$cyanForeColor om over te slaan): $reset";
