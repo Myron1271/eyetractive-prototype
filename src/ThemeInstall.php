@@ -536,4 +536,37 @@ class ThemeInstall
 
         return true;
     }
+    public static function cleanVendorGit()
+    {
+        $vendorThemePath = dirname(__DIR__);
+
+        $pathsToRemove = [
+            $vendorThemePath . '/.git',
+        ];
+
+        foreach ($pathsToRemove as $path) {
+            if (is_dir($path)) {
+                // Verwijder de .git map volledig
+                self::deleteFolderRecursive($path);
+                echo "Verwijderd: $path\n";
+            }
+        }
+    }
+    private static function deleteFolderRecursive(string $folder): void
+    {
+        if (!is_dir($folder)) {
+            return;
+        }
+
+        $items = scandir($folder);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $folder . DIRECTORY_SEPARATOR . $item;
+            is_dir($path) ? self::deleteFolderRecursive($path) : unlink($path);
+        }
+        rmdir($folder);
+    }
 }
