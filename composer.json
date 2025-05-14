@@ -18,8 +18,5 @@
   },
   "scripts": {
     "install-blink": "Eyetractive\\BlinkTheme\\ThemeInstall::install",
-    "post-install-cmd": [
-      "Eyetractive\\BlinkTheme\\ThemeInstall::cleanVendorGit"
-    ]
   }
 }
