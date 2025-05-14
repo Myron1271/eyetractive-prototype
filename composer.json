@@ -17,6 +17,6 @@
     "symfony/filesystem": "^7.2"
   },
   "scripts": {
-    "install-blink": "Eyetractive\\BlinkTheme\\ThemeInstall::install",
+    "install-blink": "Eyetractive\\BlinkTheme\\ThemeInstall::install"
   }
 }
